@@ -1,8 +1,7 @@
 # battle-code-worker
 
-Đây là thành phần worker cho hệ thống Battle Code, dùng để chạy code submission. Hiện tại hệ thống vẫn đang chỉ phục vụ cho game tic-tac-toe kích thước bảng 30, điều kiện thắng là 5.
-## NSJail — cài đặt & cấu hình (ngắn gọn) 🔧
-
+Đây là thành phần worker cho hệ thống Battle Code, dùng để chạy code submission dựa trên NSJail. Hiện tại hệ thống vẫn đang chỉ phục vụ cho game tic-tac-toe kích thước bảng 30, điều kiện thắng là 5.
+## NSJail 
 ### 1) Cài đặt / build NSJail (Linux)
 - Cài đặt trực tiếp trên máy:
 
@@ -72,13 +71,13 @@ Trong đó các biến quan trọng như:
 - `BASE_SUBMISSION_DIR`: thư mục chứa source submissions; sẽ được thay vào template `{{SUBMISSIONS_DIR}}`.
 - `NSJAIL_CONFIG_TEMPLATE`: đường dẫn tới template (mặc định đã có `tic-tac-toe/game_config.cfg.tmpl`).
 - `NSJAIL_BIN`: đường dẫn tới binary nsjail (mặc định `nsjail/nsjail` khi build nội bộ).
-- `NSJAIL_PYTHON`: interpreter được gọi *inside* nsjail (ví dụ `/usr/bin/python3`).
+- `NSJAIL_PYTHON`: interpreter được gọi trong nsjail (ví dụ `/usr/bin/python3`).
 - `TIME_LIMIT_MS`, `BOARD_SIZE`, `WIN_CONDITION`: thiết lập trò chơi.
 - `REDIS_HOST`, `REDIS_PORT`, `REDIS_QUEUE`: lấy trận đấu từ hàng đợi Redis
 
 ### 3) Chạy thử
 
-- Chạy trực tiếp controller (ví dụ):
+- Chạy trực tiếp controller nếu cần dev thêm:
 
 ```bash
 python3 tic-tac-toe/game_controller.py <match_id> <bot1_path> <bot2_path> <sub_id1> <sub_id2>
