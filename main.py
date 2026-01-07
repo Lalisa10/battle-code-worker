@@ -1,21 +1,42 @@
-import redis
-import subprocess
-import time
 import json
 import os
+import subprocess
+import time
 
-REDIS_QUEUE = "match_queue"
+import redis
 
-r = redis.Redis(host="localhost", port=6379, decode_responses=True)
+try:
+    from dotenv import load_dotenv
+except Exception:
+    load_dotenv = None
+
+if load_dotenv:
+    load_dotenv()
+
+REDIS_HOST = os.getenv("REDIS_HOST", "localhost")
+REDIS_PORT = int(os.getenv("REDIS_PORT", "6379"))
+REDIS_QUEUE = os.getenv("REDIS_QUEUE", "match_queue")
+PYTHON_BIN = os.getenv("PYTHON_BIN", "python3")
+GAME_CONTROLLER_PATH = os.getenv("GAME_CONTROLLER_PATH", "tic-tac-toe/game_controller.py")
+
+r = redis.Redis(host=REDIS_HOST, port=REDIS_PORT, decode_responses=True)
 
 def get_file_name(url):
     return url.split('/')[-1]
 
+def build_game_env(problem):
+    env = os.environ.copy()
+    if "board_size" in problem:
+        env["BOARD_SIZE"] = str(problem["board_size"])
+    if "win_condition" in problem:
+        env["WIN_CONDITION"] = str(problem["win_condition"])
+    if "time_limit_ms" in problem:
+        env["TIME_LIMIT_MS"] = str(problem["time_limit_ms"])
+    return env
+
+
 def run_match(match_id, problem, submissions):
-    # set env for game_controller
-    # os.environ["BOARD_SIZE"] = str(problem["board_size"])
-    # os.environ["WIN_CONDITION"] = str(problem["win_condition"])
-    # os.environ["TIME_LIMIT_MS"] = str(problem["time_limit_ms"])
+    game_env = build_game_env(problem)
 
     # prepare bots
     bot_paths = []
@@ -26,10 +47,11 @@ def run_match(match_id, problem, submissions):
         sub_ids.append(str(sub['submissionId']))
     #print(bot_paths)
     # example for tic-tac-toe (2 players)
-    print("Running command:", "python3", "tic-tac-toe/game_controller.py", str(match_id), bot_paths[0], bot_paths[1], sub_ids[0], sub_ids[1])
+    print("Running command:", PYTHON_BIN, GAME_CONTROLLER_PATH, str(match_id), bot_paths[0], bot_paths[1], sub_ids[0], sub_ids[1])
     subprocess.run(
-        ["python3", "tic-tac-toe/game_controller.py", str(match_id), bot_paths[0], bot_paths[1], sub_ids[0], sub_ids[1]],
-        check=True
+        [PYTHON_BIN, GAME_CONTROLLER_PATH, str(match_id), bot_paths[0], bot_paths[1], sub_ids[0], sub_ids[1]],
+        check=True,
+        env=game_env,
     )
 
 
@@ -64,7 +86,6 @@ def main():
             print(f"[ERROR] Match {match_id} failed:", e)
 
 if __name__ == "__main__":
-    print(555)
     main()
 
     # example for tic-tac-toe (2 players)

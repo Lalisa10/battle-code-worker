@@ -1,2 +1,5 @@
 /.venv/
 /nsjail/
+.env
+__pycache__/
+*.pyc

@@ -14,6 +14,12 @@ WIN_CONDITION = int(os.getenv("WIN_CONDITION", "3"))
 TIME_LIMIT_MS = int(os.getenv("TIME_LIMIT_MS", "5000"))
 REPLAY_DIR = os.getenv("REPLAY_DIR", "./replay")
 BASE_SUBMISSION_DIR = os.getenv("BASE_SUBMISSION_DIR")
+BACKEND_BASE_URL = os.getenv("BACKEND_BASE_URL", "http://localhost:8080")
+BACKEND_TOKEN = os.getenv("BACKEND_TOKEN")
+BACKEND_TIMEOUT = int(os.getenv("BACKEND_TIMEOUT", "10"))
+NSJAIL_BIN = os.getenv("NSJAIL_BIN", "nsjail/nsjail")
+NSJAIL_CONFIG = os.getenv("NSJAIL_CONFIG", "tic-tac-toe/game_config.cfg")
+NSJAIL_PYTHON = os.getenv("NSJAIL_PYTHON", "/usr/bin/python3")
 
 if WIN_CONDITION > BOARD_SIZE:
     raise ValueError("WIN_CONDITION cannot be greater than BOARD_SIZE")
@@ -22,10 +28,10 @@ if WIN_CONDITION > BOARD_SIZE:
 # NSJAIL command
 # ============================================================
 NSJAIL_CMD = [
-    "nsjail/nsjail",
-    "--config", "tic-tac-toe/game_config.cfg",
+    NSJAIL_BIN,
+    "--config", NSJAIL_CONFIG,
     "--",
-    "/usr/bin/python3"
+    NSJAIL_PYTHON,
 ]
 
 # ============================================================
@@ -235,11 +241,13 @@ def main():
         json.dump(replay, f, indent=2)
     
     update_match_result(
-        backend_base_url="http://localhost:8080",
+        backend_base_url=BACKEND_BASE_URL,
         match_id=match_id,
         status="FINISHED",
         winner_submission_id=sub_ids[winner - 1],
-        events_url=replay_path
+        events_url=replay_path,
+        token=BACKEND_TOKEN,
+        timeout=BACKEND_TIMEOUT,
     )
 
     print(f"[DONE] Match {match_id} finished, replay saved to {replay_path}")
