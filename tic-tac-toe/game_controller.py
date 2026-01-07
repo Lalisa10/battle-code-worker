@@ -2,6 +2,8 @@ import json
 import subprocess
 import sys
 import os
+import tempfile
+import atexit
 from dotenv import load_dotenv
 
 # ============================================================
@@ -18,18 +20,35 @@ BACKEND_BASE_URL = os.getenv("BACKEND_BASE_URL", "http://localhost:8080")
 BACKEND_TOKEN = os.getenv("BACKEND_TOKEN")
 BACKEND_TIMEOUT = int(os.getenv("BACKEND_TIMEOUT", "10"))
 NSJAIL_BIN = os.getenv("NSJAIL_BIN", "nsjail/nsjail")
-NSJAIL_CONFIG = os.getenv("NSJAIL_CONFIG", "tic-tac-toe/game_config.cfg")
+NSJAIL_CONFIG_TEMPLATE = os.getenv("NSJAIL_CONFIG_TEMPLATE", "tic-tac-toe/game_config.cfg.tmpl")
 NSJAIL_PYTHON = os.getenv("NSJAIL_PYTHON", "/usr/bin/python3")
+
+# determine submissions dir (use env var if set, otherwise default to ./uploads/submissions)
+SUBMISSIONS_DIR = os.path.abspath(BASE_SUBMISSION_DIR or "./uploads/submissions")
+
+def _render_nsjail_config(template_path: str, submissions_dir: str) -> str:
+    """Render the NSJail config template by substituting {{SUBMISSIONS_DIR}}.
+    Returns the path to a temporary config file (auto-removed at process exit).
+    """
+    with open(template_path, "r") as f:
+        s = f.read()
+    s = s.replace("{{SUBMISSIONS_DIR}}", submissions_dir)
+    tmp = tempfile.NamedTemporaryFile(mode="w", delete=False, prefix="nsjail_cfg_", suffix=".cfg")
+    tmp.write(s)
+    tmp.close()
+    # ensure temp file removed at Python exit
+    atexit.register(lambda path=tmp.name: os.remove(path) if os.path.exists(path) else None)
+    return tmp.name
 
 if WIN_CONDITION > BOARD_SIZE:
     raise ValueError("WIN_CONDITION cannot be greater than BOARD_SIZE")
 
 # ============================================================
-# NSJAIL command
-# ============================================================
+# NSJAIL command (uses a rendered config with substituted paths)
+RENDERED_NSJAIL_CONFIG = _render_nsjail_config(NSJAIL_CONFIG_TEMPLATE, SUBMISSIONS_DIR)
 NSJAIL_CMD = [
     NSJAIL_BIN,
-    "--config", NSJAIL_CONFIG,
+    "--config", RENDERED_NSJAIL_CONFIG,
     "--",
     NSJAIL_PYTHON,
 ]
@@ -175,7 +194,7 @@ def run_match(match_id: str, bot1: str, bot2: str):
 
     while True:
         p = players[current]
-        
+        #print(p)
         # build stdin (competitive programming style)
         input_str = ""
         for r in range(BOARD_SIZE):

@@ -1,0 +1,44 @@
+mode: ONCE
+
+time_limit: 10
+
+clone_newuser: true
+clone_newuts: true
+clone_newipc: true
+clone_newnet: true
+clone_newpid: true
+clone_newns: true
+
+
+cwd: "/sandbox"
+
+mount {
+  src: "{{SUBMISSIONS_DIR}}"
+  dst: "/sandbox"
+  is_bind: true
+  rw: true
+}
+
+mount {
+  src: "/usr"
+  dst: "/usr"
+  is_bind: true
+}
+
+mount {
+  src: "/bin"
+  dst: "/bin"
+  is_bind: true
+}
+
+mount {
+  src: "/lib"
+  dst: "/lib"
+  is_bind: true
+}
+
+mount {
+  src: "/lib64"
+  dst: "/lib64"
+  is_bind: true
+}
